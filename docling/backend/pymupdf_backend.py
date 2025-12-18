@@ -4,7 +4,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Union
 
-import pymupdf as fitz
+import fitz  # PyMuPDF
 from docling_core.types.doc import BoundingBox, CoordOrigin, Size
 from docling_core.types.doc.page import (
     BoundingRectangle,
