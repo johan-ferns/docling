@@ -53,7 +53,7 @@ def get_pdf_page_geometry(
     # Get different page boxes from PyMuPDF
     # PyMuPDF uses mediabox, cropbox, etc.
     mediabox = page.mediabox
-    cropbox = page.cropbox if hasattr(page, "cropbox") else rect
+    cropbox = page.cropbox  # PyMuPDF Page objects always have cropbox attribute
 
     # For boxes not directly available, use the main rect as fallback
     media_bbox = BoundingBox(
