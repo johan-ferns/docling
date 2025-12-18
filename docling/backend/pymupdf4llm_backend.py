@@ -3,7 +3,6 @@ from io import BytesIO
 from pathlib import Path
 from typing import Set, Union
 
-import pymupdf4llm
 from docling_core.types.doc import DoclingDocument, DocumentOrigin
 
 from docling.backend.abstract_backend import DeclarativeDocumentBackend
@@ -36,8 +35,17 @@ class PyMuPDF4LLMBackend(DeclarativeDocumentBackend):
 
         _log.debug("Starting PyMuPDF4LLMBackend...")
 
-        self.valid = True
+        self.valid = False
         self.markdown_content = ""
+
+        try:
+            # Import pymupdf4llm here to avoid import errors if not installed
+            import pymupdf4llm
+        except ImportError as e:
+            raise ImportError(
+                "pymupdf4llm is required for PyMuPDF4LLMBackend. "
+                "Install it with: pip install 'docling[pymupdf4llm]' or pip install pymupdf4llm"
+            ) from e
 
         try:
             # PyMuPDF4LLM can handle both file paths and file-like objects
@@ -57,7 +65,6 @@ class PyMuPDF4LLMBackend(DeclarativeDocumentBackend):
             _log.debug(f"Successfully converted PDF to Markdown ({len(self.markdown_content)} chars)")
         except Exception as e:
             _log.error(f"Failed to initialize PyMuPDF4LLM backend: {e}")
-            self.valid = False
             raise RuntimeError(
                 f"Could not initialize PyMuPDF4LLM backend for file with hash {self.document_hash}."
             ) from e
