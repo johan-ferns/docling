@@ -72,6 +72,52 @@ markdown_content = backend.markdown_content
 doc = backend.convert()
 ```
 
+### Using with DocumentConverter
+
+To use PyMuPDF4LLM backend with `DocumentConverter`, you need to use `SimplePipeline`
+(not `StandardPdfPipeline`) since PyMuPDF4LLM is a declarative backend:
+
+```python
+from pathlib import Path
+from docling.document_converter import DocumentConverter, FormatOption
+from docling.pipeline.simple_pipeline import SimplePipeline
+from docling.backend.pymupdf4llm_backend import PyMuPDF4LLMBackend
+from docling.datamodel.base_models import InputFormat
+
+# Option 1: Use FormatOption directly
+converter = DocumentConverter(
+    format_options={
+        InputFormat.PDF: FormatOption(
+            pipeline_cls=SimplePipeline,
+            backend=PyMuPDF4LLMBackend
+        )
+    }
+)
+
+# Option 2: If PyMuPDF4LLMFormatOption is available
+try:
+    from docling.document_converter import PyMuPDF4LLMFormatOption
+    converter = DocumentConverter(
+        format_options={
+            InputFormat.PDF: PyMuPDF4LLMFormatOption()
+        }
+    )
+except ImportError:
+    # PyMuPDF4LLMFormatOption not available, use Option 1
+    pass
+
+# Convert your PDF
+result = converter.convert("path/to/sample.pdf")
+doc = result.document
+
+# Export to Markdown
+markdown = doc.export_to_markdown()
+```
+
+**Important:** Do not use `PdfFormatOption` or `StandardPdfPipeline` with `PyMuPDF4LLMBackend`.
+These are designed for paginated PDF backends like `DoclingParseV4DocumentBackend`.
+Use `SimplePipeline` instead as shown above.
+
 ## Features
 
 The PyMuPDF4LLM backend preserves:
