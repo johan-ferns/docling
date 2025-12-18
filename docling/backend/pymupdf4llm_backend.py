@@ -16,7 +16,7 @@ _log = logging.getLogger(__name__)
 class PyMuPDF4LLMBackend(DeclarativeDocumentBackend):
     """
     Backend that uses PyMuPDF4LLM to convert PDFs to Markdown format.
-    
+
     PyMuPDF4LLM provides optimized PDF to Markdown conversion with support for:
     - Text formatting (bold, italic, headers)
     - Tables with alignment
@@ -60,7 +60,7 @@ class PyMuPDF4LLMBackend(DeclarativeDocumentBackend):
                 self.markdown_content = pymupdf4llm.to_markdown(str(self.path_or_stream))
             else:
                 raise ValueError(f"Unsupported input type: {type(self.path_or_stream)}")
-            
+
             self.valid = True
             _log.debug(f"Successfully converted PDF to Markdown ({len(self.markdown_content)} chars)")
         except Exception as e:
@@ -100,10 +100,10 @@ class PyMuPDF4LLMBackend(DeclarativeDocumentBackend):
 
         # Import here to avoid circular dependency
         from docling.backend.md_backend import MarkdownDocumentBackend
-        
+
         # Create a BytesIO stream from the markdown content
         md_stream = BytesIO(self.markdown_content.encode("utf-8"))
-        
+
         # Create an InputDocument for the markdown
         md_in_doc = InputDocument(
             path_or_stream=md_stream,
@@ -111,20 +111,20 @@ class PyMuPDF4LLMBackend(DeclarativeDocumentBackend):
             backend=MarkdownDocumentBackend,
             filename=f"{self.file.stem}.md" if self.file else "converted.md",
         )
-        
+
         # Use the MarkdownDocumentBackend to convert to DoclingDocument
         md_backend = MarkdownDocumentBackend(
             in_doc=md_in_doc,
             path_or_stream=md_stream,
         )
-        
+
         doc = md_backend.convert()
-        
+
         # Update the document origin to reflect that this came from a PDF
         doc.origin = DocumentOrigin(
             filename=self.file.name or "file.pdf",
             mimetype="application/pdf",
             binary_hash=self.document_hash,
         )
-        
+
         return doc
