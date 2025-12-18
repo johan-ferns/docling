@@ -54,7 +54,7 @@ def get_pdf_page_geometry(
     # PyMuPDF uses mediabox, cropbox, etc.
     mediabox = page.mediabox
     cropbox = page.cropbox if hasattr(page, "cropbox") else rect
-    
+
     # For boxes not directly available, use the main rect as fallback
     media_bbox = BoundingBox(
         l=mediabox.x0,
@@ -63,7 +63,7 @@ def get_pdf_page_geometry(
         t=mediabox.y1,
         coord_origin=CoordOrigin.BOTTOMLEFT,
     )
-    
+
     crop_bbox = BoundingBox(
         l=cropbox.x0,
         b=cropbox.y0,
@@ -94,7 +94,7 @@ class PyMuPDFPageBackend(PdfPageBackend):
         self.valid = True
         try:
             self._page: fitz.Page = doc.load_page(page_no)
-        except Exception as e:
+        except Exception:
             _log.info(
                 f"An exception occurred when loading page {page_no} of document {document_hash}.",
                 exc_info=True,
@@ -123,18 +123,18 @@ class PyMuPDFPageBackend(PdfPageBackend):
                     line_bbox = line.get("bbox")
                     if not line_bbox:
                         continue
-                    
+
                     x0, y0, x1, y1 = line_bbox
-                    
+
                     # Extract text from spans
                     text_pieces = []
                     for span in line.get("spans", []):
                         text_pieces.append(span.get("text", ""))
-                    
+
                     line_text = "".join(text_pieces)
                     if not line_text.strip():
                         continue
-                    
+
                     # PyMuPDF uses top-left origin, convert to bottom-left for consistency
                     cells.append(
                         TextCell(
@@ -145,9 +145,11 @@ class PyMuPDFPageBackend(PdfPageBackend):
                             rect=BoundingRectangle.from_bounding_box(
                                 BoundingBox(
                                     l=x0,
-                                    b=page_size.height - y1,  # Convert from top-left to bottom-left
+                                    b=page_size.height
+                                    - y1,  # Convert from top-left to bottom-left
                                     r=x1,
-                                    t=page_size.height - y0,  # Convert from top-left to bottom-left
+                                    t=page_size.height
+                                    - y0,  # Convert from top-left to bottom-left
                                     coord_origin=CoordOrigin.BOTTOMLEFT,
                                 )
                             ).to_top_left_origin(page_size.height),
@@ -161,10 +163,10 @@ class PyMuPDFPageBackend(PdfPageBackend):
         """Get bounding boxes of images on the page."""
         AREA_THRESHOLD = 0  # Can be adjusted similar to pypdfium2
         page_size = self.get_size()
-        
+
         # Get image list from the page
         image_list = self._page.get_images()
-        
+
         for img_index, img in enumerate(image_list):
             try:
                 # Get image bounding box
@@ -172,10 +174,10 @@ class PyMuPDFPageBackend(PdfPageBackend):
                 xref = img[0]
                 # Get all instances of this image on the page
                 img_rects = self._page.get_image_rects(xref)
-                
+
                 for rect in img_rects:
                     x0, y0, x1, y1 = rect.x0, rect.y0, rect.x1, rect.y1
-                    
+
                     # Convert from top-left to bottom-left origin
                     cropbox = BoundingBox(
                         l=x0,
@@ -184,7 +186,7 @@ class PyMuPDFPageBackend(PdfPageBackend):
                         b=page_size.height - y1,
                         coord_origin=CoordOrigin.TOPLEFT,
                     )
-                    
+
                     if cropbox.area() > AREA_THRESHOLD:
                         cropbox = cropbox.scaled(scale=scale)
                         yield cropbox
@@ -195,14 +197,14 @@ class PyMuPDFPageBackend(PdfPageBackend):
     def get_text_in_rect(self, bbox: BoundingBox) -> str:
         """Extract text within a bounding box."""
         page_size = self.get_size()
-        
+
         # Convert to top-left origin if needed (PyMuPDF uses top-left)
         if bbox.coord_origin != CoordOrigin.TOPLEFT:
             bbox = bbox.to_top_left_origin(page_size.height)
-        
+
         # Create PyMuPDF rect
         rect = fitz.Rect(bbox.l, bbox.t, bbox.r, bbox.b)
-        
+
         # Extract text from the rectangle
         text = self._page.get_text("text", clip=rect)
         return text
@@ -246,23 +248,23 @@ class PyMuPDFPageBackend(PdfPageBackend):
                 b=page_size.height,
                 coord_origin=CoordOrigin.TOPLEFT,
             )
-        
+
         # Convert cropbox to top-left origin if needed
         if cropbox.coord_origin != CoordOrigin.TOPLEFT:
             cropbox = cropbox.to_top_left_origin(page_size.height)
 
         # Create a matrix for scaling and cropping
         mat = fitz.Matrix(scale, scale)
-        
+
         # Define the clip rectangle
         clip = fitz.Rect(cropbox.l, cropbox.t, cropbox.r, cropbox.b)
-        
+
         # Render the page
         pix = self._page.get_pixmap(matrix=mat, clip=clip)
-        
+
         # Convert to PIL Image
         img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-        
+
         return img
 
     def get_size(self) -> Size:
@@ -288,7 +290,7 @@ class PyMuPDFDocumentBackend(PdfDocumentBackend):
         password = (
             self.options.password.get_secret_value() if self.options.password else None
         )
-        
+
         try:
             if isinstance(path_or_stream, BytesIO):
                 # Read from BytesIO
@@ -296,7 +298,7 @@ class PyMuPDFDocumentBackend(PdfDocumentBackend):
             else:
                 # Read from file path
                 self._doc = fitz.open(path_or_stream)
-            
+
             # Apply password if provided
             if password and self._doc.needs_pass:
                 if not self._doc.authenticate(password):

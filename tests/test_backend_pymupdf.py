@@ -38,7 +38,7 @@ def test_get_text_from_rect(test_doc_path):
     textpiece = page_backend.get_text_in_rect(
         bbox=BoundingBox(l=102, t=77, r=511, b=124)
     )
-    
+
     # The text should contain the title
     assert "DocLayNet" in textpiece or "Document-Layout" in textpiece
 
@@ -52,7 +52,7 @@ def test_crop_page_image(test_doc_path):
     img = page_backend.get_page_image(
         scale=2, cropbox=BoundingBox(l=317, t=246, r=574, b=527)
     )
-    
+
     # Verify image was created
     assert img is not None
     assert img.width > 0
@@ -69,12 +69,12 @@ def test_text_cells(test_doc_path):
     """Test extracting text cells from a page."""
     doc_backend = _get_backend(test_doc_path)
     page_backend: PyMuPDFPageBackend = doc_backend.load_page(0)
-    
+
     cells = list(page_backend.get_text_cells())
-    
+
     # Should have extracted some text cells
     assert len(cells) > 0
-    
+
     # Cells should have text
     assert any(cell.text.strip() for cell in cells)
 
@@ -83,9 +83,9 @@ def test_get_segmented_page(test_doc_path):
     """Test getting a segmented page."""
     doc_backend = _get_backend(test_doc_path)
     page_backend: PyMuPDFPageBackend = doc_backend.load_page(0)
-    
+
     segmented_page = page_backend.get_segmented_page()
-    
+
     assert segmented_page is not None
     assert segmented_page.has_textlines
     assert len(segmented_page.textline_cells) > 0
@@ -95,9 +95,9 @@ def test_get_page_size(test_doc_path):
     """Test getting page dimensions."""
     doc_backend = _get_backend(test_doc_path)
     page_backend: PyMuPDFPageBackend = doc_backend.load_page(0)
-    
+
     size = page_backend.get_size()
-    
+
     assert size.width > 0
     assert size.height > 0
 
@@ -105,12 +105,12 @@ def test_get_page_size(test_doc_path):
 def test_get_bitmap_rects(test_doc_path):
     """Test getting image bounding boxes from a page."""
     doc_backend = _get_backend(test_doc_path)
-    
+
     # Try different pages to find one with images
     for page_no in range(min(3, doc_backend.page_count())):
         page_backend: PyMuPDFPageBackend = doc_backend.load_page(page_no)
         bitmap_rects = list(page_backend.get_bitmap_rects())
-        
+
         # If we found images, verify they have valid bounding boxes
         if bitmap_rects:
             for rect in bitmap_rects:
@@ -132,12 +132,12 @@ def test_document_conversion_with_pymupdf(test_doc_path):
             )
         }
     )
-    
+
     conv_res = doc_converter.convert(test_doc_path)
-    
+
     # Verify conversion succeeded
     assert conv_res.document is not None
-    
+
     # Export to markdown and verify we got some content
     markdown = conv_res.document.export_to_markdown()
     assert len(markdown) > 0
@@ -147,9 +147,9 @@ def test_document_conversion_with_pymupdf(test_doc_path):
 def test_invalid_page(test_doc_path):
     """Test handling of invalid page numbers."""
     doc_backend = _get_backend(test_doc_path)
-    
+
     # Try to load a page beyond the document
     page_backend = doc_backend.load_page(999)
-    
+
     # Should be marked as invalid
     assert not page_backend.is_valid()
