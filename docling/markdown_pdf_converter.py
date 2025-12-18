@@ -9,10 +9,6 @@ import logging
 from pathlib import Path
 from typing import Union
 
-from docling.backend.pymupdf4llm_backend import PyMuPDF4LLMBackend
-from docling.datamodel.base_models import InputFormat
-from docling.datamodel.document import InputDocument
-
 _log = logging.getLogger(__name__)
 
 
@@ -61,6 +57,7 @@ class MarkdownPDFConverter:
         Raises:
             FileNotFoundError: If the PDF file does not exist
             RuntimeError: If the conversion fails
+            ImportError: If pymupdf4llm is not installed
             
         Example:
             ```python
@@ -80,22 +77,17 @@ class MarkdownPDFConverter:
         _log.info(f"Converting PDF to Markdown: {pdf_path}")
         
         try:
-            # Create an InputDocument
-            in_doc = InputDocument(
-                path_or_stream=pdf_path,
-                format=InputFormat.PDF,
-                backend=PyMuPDF4LLMBackend,
-                filename=pdf_path.name,
-            )
-            
-            # Create the backend and convert
-            backend = PyMuPDF4LLMBackend(
-                in_doc=in_doc,
-                path_or_stream=pdf_path,
-            )
-            
-            # Get the markdown content directly from the backend
-            markdown_content = backend.markdown_content
+            # Import pymupdf4llm here to avoid import errors if not installed
+            import pymupdf4llm
+        except ImportError as e:
+            raise ImportError(
+                "pymupdf4llm is required for PDF to Markdown conversion. "
+                "Install it with: pip install 'docling[pymupdf4llm]' or pip install pymupdf4llm"
+            ) from e
+        
+        try:
+            # Use pymupdf4llm directly to convert PDF to Markdown
+            markdown_content = pymupdf4llm.to_markdown(str(pdf_path))
             
             _log.info(f"Successfully converted PDF to Markdown ({len(markdown_content)} chars)")
             
