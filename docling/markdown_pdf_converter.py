@@ -17,12 +17,16 @@ class MarkdownPDFConverter:
     A simple converter class for converting PDF files to Markdown format using PyMuPDF4LLM.
 
     This class provides an easy-to-use interface for PDF to Markdown conversion,
-    leveraging the PyMuPDF4LLM backend which preserves:
+    using the PyMuPDF4LLMBackend internally. It preserves:
     - Text formatting (bold, italic, headers)
     - Table structure and alignment
     - Images
     - Multi-column layouts
     - Code blocks
+
+    Note: This class uses the PyMuPDF4LLMBackend internally when all dependencies
+    are available. If Docling dependencies are missing, it falls back to using
+    pymupdf4llm directly.
 
     Example:
         ```python
@@ -77,17 +81,45 @@ class MarkdownPDFConverter:
         _log.info(f"Converting PDF to Markdown: {pdf_path}")
 
         try:
-            # Import pymupdf4llm here to avoid import errors if not installed
-            import pymupdf4llm
-        except ImportError as e:
-            raise ImportError(
-                "pymupdf4llm is required for PDF to Markdown conversion. "
-                "Install it with: pip install 'docling[pymupdf4llm]' or pip install pymupdf4llm"
-            ) from e
+            # Import the backend here to avoid heavy imports at module level
+            from docling.backend.pymupdf4llm_backend import PyMuPDF4LLMBackend
+            from docling.datamodel.base_models import InputFormat
+            from docling.datamodel.document import InputDocument
+        except ImportError:
+            # If Docling dependencies are not available, fall back to direct pymupdf4llm usage
+            _log.warning("Could not import Docling backend, using pymupdf4llm directly")
+            try:
+                import pymupdf4llm
+            except ImportError as e2:
+                raise ImportError(
+                    "pymupdf4llm is required for PDF to Markdown conversion. "
+                    "Install it with: pip install 'docling[pymupdf4llm]' or pip install pymupdf4llm"
+                ) from e2
+
+            try:
+                markdown_content = pymupdf4llm.to_markdown(str(pdf_path))
+                _log.info(f"Successfully converted PDF to Markdown ({len(markdown_content)} chars)")
+                return markdown_content
+            except Exception as e3:
+                _log.error(f"Failed to convert PDF to Markdown: {e3}")
+                raise RuntimeError(f"PDF to Markdown conversion failed: {e3}") from e3
 
         try:
-            # Use pymupdf4llm directly to convert PDF to Markdown
-            markdown_content = pymupdf4llm.to_markdown(str(pdf_path))
+            # Use the PyMuPDF4LLM backend to perform the conversion
+            in_doc = InputDocument(
+                path_or_stream=pdf_path,
+                format=InputFormat.PDF,
+                backend=PyMuPDF4LLMBackend,
+                filename=pdf_path.name,
+            )
+
+            backend = PyMuPDF4LLMBackend(
+                in_doc=in_doc,
+                path_or_stream=pdf_path,
+            )
+
+            # Get the markdown content from the backend
+            markdown_content = backend.markdown_content
 
             _log.info(f"Successfully converted PDF to Markdown ({len(markdown_content)} chars)")
 

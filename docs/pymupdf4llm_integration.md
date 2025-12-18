@@ -20,7 +20,9 @@ pip install pymupdf4llm
 
 ### Using MarkdownPDFConverter
 
-The simplest way to convert PDFs to Markdown is using the `MarkdownPDFConverter` class:
+The simplest way to convert PDFs to Markdown is using the `MarkdownPDFConverter` class.
+This class uses the `PyMuPDF4LLMBackend` internally when all dependencies are available,
+providing a simple API that returns Markdown strings:
 
 ```python
 from docling import MarkdownPDFConverter
@@ -40,7 +42,8 @@ print(f"Converted PDF to Markdown ({len(markdown_content)} characters)")
 
 ### Using the PyMuPDF4LLM Backend Directly
 
-For more advanced use cases, you can use the PyMuPDF4LLM backend directly:
+For advanced use cases where you need a `DoclingDocument` object or want to integrate
+with Docling's document processing pipeline, you can use the PyMuPDF4LLM backend directly:
 
 ```python
 from pathlib import Path
