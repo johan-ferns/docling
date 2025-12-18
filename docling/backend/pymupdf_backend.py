@@ -165,7 +165,10 @@ class PyMuPDFPageBackend(PdfPageBackend):
         return cells
 
     def get_bitmap_rects(self, scale: float = 1) -> Iterable[BoundingBox]:
-        """Get bounding boxes of images on the page."""
+        """Get bounding boxes of images on the page.
+
+        Extracts image references from the page and finds their bounding rectangles.
+        """
         AREA_THRESHOLD = 0  # Can be adjusted similar to pypdfium2
         page_size = self.get_size()
 
@@ -174,7 +177,6 @@ class PyMuPDFPageBackend(PdfPageBackend):
 
         for img_index, img in enumerate(image_list):
             try:
-                # Get image bounding box
                 # img[0] is the xref of the image
                 xref = img[0]
                 # Get all instances of this image on the page
@@ -183,13 +185,14 @@ class PyMuPDFPageBackend(PdfPageBackend):
                 for rect in img_rects:
                     x0, y0, x1, y1 = rect.x0, rect.y0, rect.x1, rect.y1
 
-                    # Convert from top-left to bottom-left origin
+                    # PyMuPDF returns coordinates in top-left origin
+                    # Convert to bottom-left origin for consistency with the library
                     cropbox = BoundingBox(
                         l=x0,
                         t=page_size.height - y0,
                         r=x1,
                         b=page_size.height - y1,
-                        coord_origin=CoordOrigin.TOPLEFT,
+                        coord_origin=CoordOrigin.BOTTOMLEFT,
                     )
 
                     if cropbox.area() > AREA_THRESHOLD:
