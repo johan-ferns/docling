@@ -160,6 +160,64 @@ converter = DocumentConverter()
 result = converter.convert(source)
 ```
 
+## Using alternative PDF backends
+
+Docling supports multiple PDF processing backends. By default, it uses DoclingParse for advanced PDF understanding. You can also use alternative backends like PyPdfium2 or PyMuPDF depending on your needs.
+
+### Using PyMuPDF backend
+
+PyMuPDF (also known as fitz) is a fast and feature-rich PDF processing library. To use it as the backend:
+
+```python
+from docling.backend.pymupdf_backend import PyMuPDFDocumentBackend
+from docling.datamodel.base_models import InputFormat
+from docling.datamodel.pipeline_options import PdfPipelineOptions
+from docling.document_converter import DocumentConverter, PdfFormatOption
+
+pipeline_options = PdfPipelineOptions()
+pipeline_options.do_ocr = False
+pipeline_options.do_table_structure = True
+
+doc_converter = DocumentConverter(
+    format_options={
+        InputFormat.PDF: PdfFormatOption(
+            pipeline_options=pipeline_options,
+            backend=PyMuPDFDocumentBackend
+        )
+    }
+)
+
+result = doc_converter.convert("path/to/document.pdf")
+```
+
+### Using PyPdfium2 backend
+
+PyPdfium2 is another alternative PDF backend:
+
+```python
+from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
+from docling.datamodel.base_models import InputFormat
+from docling.datamodel.pipeline_options import PdfPipelineOptions
+from docling.document_converter import DocumentConverter, PdfFormatOption
+
+pipeline_options = PdfPipelineOptions()
+pipeline_options.do_ocr = False
+pipeline_options.do_table_structure = True
+
+doc_converter = DocumentConverter(
+    format_options={
+        InputFormat.PDF: PdfFormatOption(
+            pipeline_options=pipeline_options,
+            backend=PyPdfiumDocumentBackend
+        )
+    }
+)
+
+result = doc_converter.convert("path/to/document.pdf")
+```
+
+See [custom_convert.py](../examples/custom_convert.py) for more examples of using different backends.
+
 ## Limit resource usage
 
 You can limit the CPU threads used by Docling by setting the environment variable `OMP_NUM_THREADS` accordingly. The default setting is using 4 CPU threads.
