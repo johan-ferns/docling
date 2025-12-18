@@ -51,9 +51,14 @@ def get_pdf_page_geometry(
     )
 
     # Get different page boxes from PyMuPDF
-    # PyMuPDF uses mediabox, cropbox, etc.
-    mediabox = page.mediabox
-    cropbox = page.cropbox  # PyMuPDF Page objects always have cropbox attribute
+    # PyMuPDF Page objects have standard PDF boxes: mediabox and cropbox
+    try:
+        mediabox = page.mediabox
+        cropbox = page.cropbox
+    except AttributeError:
+        # Fallback if page boxes are not available (shouldn't happen with PyMuPDF >= 1.23.0)
+        mediabox = rect
+        cropbox = rect
 
     # For boxes not directly available, use the main rect as fallback
     media_bbox = BoundingBox(
@@ -274,7 +279,8 @@ class PyMuPDFPageBackend(PdfPageBackend):
 
     def unload(self):
         """Unload the page resources."""
-        self._page = None
+        if self.valid and self._page is not None:
+            self._page = None
         self._text_dict = None
 
 
