@@ -21,6 +21,7 @@
 # - If you uncomment a backend or OCR option that is not imported above, also
 #   import its class, e.g.:
 #   - `from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend`
+#   - `from docling.backend.pymupdf_backend import PyMuPDFDocumentBackend`
 #   - `from docling.datamodel.pipeline_options import TesseractOcrOptions, TesseractCliOcrOptions, OcrMacOptions`
 #
 # Input document
@@ -71,6 +72,36 @@ def main():
     #     format_options={
     #         InputFormat.PDF: PdfFormatOption(
     #             pipeline_options=pipeline_options, backend=PyPdfiumDocumentBackend
+    #         )
+    #     }
+    # )
+
+    # PyMuPDF without EasyOCR
+    # --------------------
+    # pipeline_options = PdfPipelineOptions()
+    # pipeline_options.do_ocr = False
+    # pipeline_options.do_table_structure = True
+    # pipeline_options.table_structure_options.do_cell_matching = False
+
+    # doc_converter = DocumentConverter(
+    #     format_options={
+    #         InputFormat.PDF: PdfFormatOption(
+    #             pipeline_options=pipeline_options, backend=PyMuPDFDocumentBackend
+    #         )
+    #     }
+    # )
+
+    # PyMuPDF with EasyOCR
+    # -----------------
+    # pipeline_options = PdfPipelineOptions()
+    # pipeline_options.do_ocr = True
+    # pipeline_options.do_table_structure = True
+    # pipeline_options.table_structure_options.do_cell_matching = True
+
+    # doc_converter = DocumentConverter(
+    #     format_options={
+    #         InputFormat.PDF: PdfFormatOption(
+    #             pipeline_options=pipeline_options, backend=PyMuPDFDocumentBackend
     #         )
     #     }
     # )
