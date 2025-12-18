@@ -33,6 +33,14 @@ from docling.backend.noop_backend import NoOpBackend
 from docling.backend.webvtt_backend import WebVTTDocumentBackend
 from docling.backend.xml.jats_backend import JatsDocumentBackend
 from docling.backend.xml.uspto_backend import PatentUsptoDocumentBackend
+
+# Optional backend - only imported if available
+try:
+    from docling.backend.pymupdf4llm_backend import PyMuPDF4LLMBackend
+    _PYMUPDF4LLM_AVAILABLE = True
+except ImportError:
+    _PYMUPDF4LLM_AVAILABLE = False
+    PyMuPDF4LLMBackend = None  # type: ignore
 from docling.datamodel.backend_options import (
     BackendOptions,
     HTMLBackendOptions,
@@ -138,6 +146,13 @@ class PdfFormatOption(FormatOption):
     pipeline_cls: Type = StandardPdfPipeline
     backend: Type[AbstractDocumentBackend] = DoclingParseV4DocumentBackend
     backend_options: Optional[PdfBackendOptions] = None
+
+
+# PyMuPDF4LLM format option (only available if pymupdf4llm is installed)
+if _PYMUPDF4LLM_AVAILABLE:
+    class PyMuPDF4LLMFormatOption(FormatOption):
+        pipeline_cls: Type = SimplePipeline
+        backend: Type[AbstractDocumentBackend] = PyMuPDF4LLMBackend  # type: ignore
 
 
 class AudioFormatOption(FormatOption):
